@@ -15,3 +15,5 @@
 ## 三、 Todo
 - [ ] 换个好看的图标。。。
 
+## 四、支持 python3
+- [感谢ualfred](https://github.com/ischaojie/ualfred)
