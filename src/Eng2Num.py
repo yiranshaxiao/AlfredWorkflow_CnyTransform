@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -12,7 +12,7 @@ DIGIT_TALBE = {u'ZERO':0,u'ONE':1,u'TWO':2,u'THREE':3,u'FOUR':4,u'FIVE':5,u'SIX'
 CARDINAL_NUMBER = {u'THOUSAND':1000,u'MILLION':1000000,u'BILLION':1000000000,u'TRILLION':1000000000000}
 
 def transform(eng_str):
-    if not isinstance(eng_str,unicode):
+    if not isinstance(eng_str,str):
         eng_str = eng_str.decode('utf8')
     
     eng_str = eng_str.upper()
@@ -60,4 +60,4 @@ if __name__ == '__main__':
     eng_str = 'three hundred and twenty one trillion FOUR BILLION SIX HUNDRED AND EIGHTY \
 MILLION FOUR THOUSAND FIVE HUNDRED AND SIXTY SEVEN AND CENTS fourty eight ONLY'
     price = transform(eng_str)
-    print price
+    print (price)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -9,7 +9,7 @@ CNY_UNIT = {u'拾':10,u'佰':100,u'仟':1000,u'角':0.1,u'分':0.01}
 CARDINAL_NUMBER = {u'万':10000,u'亿':100000000}
 
 def transform(cny_str):
-    if not isinstance(cny_str,unicode):
+    if not isinstance(cny_str, str):
         cny_str = cny_str.decode('utf8')
     
     price = 0.0
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     cny_str6 = u'贰佰伍拾肆亿肆仟叁佰万零陆仟伍佰零壹圆肆角捌分'
     cny_str7 = u'贰亿柒仟叁佰贰拾壹万零叁仟零伍亿壹佰贰拾叁万伍仟玖佰零壹元肆角捌分'
     price = transform(cny_str7)
-    print price
+    print (price)
 #    import time
 #    start = time.time()
 #    for i in xrange(10000000):

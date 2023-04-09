@@ -7,11 +7,11 @@
 # Created on 2016-06-25
 #
 
-"""An Alfred 3-only version of :class:`~workflow.Workflow`.
+"""An Alfred 3+ version of :class:`~ualfred.Workflow`.
 
-:class:`~workflow.Workflow3` supports Alfred 3's new features, such as
-setting :ref:`workflow-variables` and
-:class:`the more advanced modifiers <Modifier>` supported by Alfred 3.
+:class:`~ualfred.Workflow3` supports new features, such as
+setting :ref:`ualfred-variables` and
+:class:`the more advanced modifiers <Modifier>` supported by Alfred 3+.
 
 In order for the feedback mechanism to work correctly, it's important
 to create :class:`Item3` and :class:`Modifier` objects via the
@@ -22,14 +22,11 @@ of them, and they won't be sent to Alfred when you call
 :meth:`Workflow3.send_feedback()`.
 
 """
-
-from __future__ import print_function, unicode_literals, absolute_import
-
 import json
 import os
 import sys
 
-from .workflow import ICON_WARNING, Workflow
+from ualfred.workflow import ICON_WARNING, Workflow
 
 
 class Variables(dict):
@@ -37,26 +34,30 @@ class Variables(dict):
 
     .. versionadded: 1.26
 
-    This class allows you to set workflow variables from
+    This class allows you to set ualfred variables from
     Run Script actions.
 
     It is a subclass of :class:`dict`.
 
     >>> v = Variables(username='deanishe', password='hunter2')
-    >>> v.arg = u'output value'
+    >>> v.arg = 'output value'
     >>> print(v)
 
     See :ref:`variables-run-script` in the User Guide for more
     information.
 
     Args:
-        arg (unicode, optional): Main output/``{query}``.
+        arg (unicode or list, optional): Main output/``{query}``.
         **variables: Workflow variables to set.
 
+    In Alfred 4.1+ and Alfred-Workflow 1.40+, ``arg`` may also be a
+    :class:`list` or :class:`tuple`.
 
     Attributes:
-        arg (unicode): Output value (``{query}``).
-        config (dict): Configuration for downstream workflow element.
+        arg (unicode or list): Output value (``{query}``).
+            In Alfred 4.1+ and Alfred-Workflow 1.40+, ``arg`` may also be a
+            :class:`list` or :class:`tuple`.
+        config (dict): Configuration for downstream ualfred element.
 
     """
 
@@ -68,48 +69,48 @@ class Variables(dict):
 
     @property
     def obj(self):
-        """Return ``alfredworkflow`` `dict`."""
+        """``alfredworkflow`` :class:`dict`."""
         o = {}
         if self:
             d2 = {}
             for k, v in self.items():
                 d2[k] = v
-            o['variables'] = d2
+            o["variables"] = d2
 
         if self.config:
-            o['config'] = self.config
+            o["config"] = self.config
 
         if self.arg is not None:
-            o['arg'] = self.arg
+            o["arg"] = self.arg
 
-        return {'alfredworkflow': o}
+        return {"alfredworkflow": o}
 
-    def __unicode__(self):
+    def __str__(self) -> str:
         """Convert to ``alfredworkflow`` JSON object.
 
         Returns:
-            unicode: ``alfredworkflow`` JSON object
+            str: ``alfredworkflow`` JSON object
 
         """
         if not self and not self.config:
-            if self.arg:
+            if not self.arg:
+                return ""
+            if isinstance(self.arg, str):
                 return self.arg
-            else:
-                return u''
 
         return json.dumps(self.obj)
 
-    def __str__(self):
+    def __bytes__(self) -> bytes:
         """Convert to ``alfredworkflow`` JSON object.
 
         Returns:
             str: UTF-8 encoded ``alfredworkflow`` JSON object
 
         """
-        return unicode(self).encode('utf-8')
+        return self.__str__.encode("utf-8")
 
 
-class Modifier(object):
+class Modifier:
     """Modify :class:`Item3` arg/icon/variables when modifier key is pressed.
 
     Don't use this class directly (as it won't be associated with any
@@ -121,7 +122,7 @@ class Modifier(object):
     >>> m = it.add_modifier('cmd')
     >>> m.setvar('name', 'alternate')
 
-    See :ref:`workflow-variables` in the User Guide for more information
+    See :ref:`ualfred-variables` in the User Guide for more information
     and :ref:`example usage <example-variables>`.
 
     Args:
@@ -131,7 +132,7 @@ class Modifier(object):
         valid (bool, optional): Override item's validity.
         icon (unicode, optional): Filepath/UTI of icon to use
         icontype (unicode, optional): Type of icon. See
-            :meth:`Workflow.add_item() <workflow.Workflow.add_item>`
+            :meth:`Workflow.add_item() <ualfred.Workflow.add_item>`
             for valid values.
 
     Attributes:
@@ -140,7 +141,7 @@ class Modifier(object):
             a File Filter.
         icon (unicode): Filepath/UTI of icon.
         icontype (unicode): Type of icon. See
-            :meth:`Workflow.add_item() <workflow.Workflow.add_item>`
+            :meth:`Workflow.add_item() <ualfred.Workflow.add_item>`
             for valid values.
         key (unicode): Modifier key (see above).
         subtitle (unicode): Override item subtitle.
@@ -149,8 +150,7 @@ class Modifier(object):
 
     """
 
-    def __init__(self, key, subtitle=None, arg=None, valid=None, icon=None,
-                 icontype=None):
+    def __init__(self, key, subtitle=None, arg=None, valid=None, icon=None, icontype=None):
         """Create a new :class:`Modifier`.
 
         Don't use this class directly (as it won't be associated with any
@@ -164,7 +164,7 @@ class Modifier(object):
             valid (bool, optional): Override item's validity.
             icon (unicode, optional): Filepath/UTI of icon to use
             icontype (unicode, optional): Type of icon. See
-                :meth:`Workflow.add_item() <workflow.Workflow.add_item>`
+                :meth:`Workflow.add_item() <ualfred.Workflow.add_item>`
                 for valid values.
 
         """
@@ -179,7 +179,7 @@ class Modifier(object):
         self.variables = {}
 
     def setvar(self, name, value):
-        """Set a workflow variable for this Item.
+        """Set a ualfred variable for this Item.
 
         Args:
             name (unicode): Name of variable.
@@ -189,7 +189,7 @@ class Modifier(object):
         self.variables[name] = value
 
     def getvar(self, name, default=None):
-        """Return value of workflow variable for ``name`` or ``default``.
+        """Return value of ualfred variable for ``name`` or ``default``.
 
         Args:
             name (unicode): Variable name.
@@ -212,23 +212,23 @@ class Modifier(object):
         o = {}
 
         if self.subtitle is not None:
-            o['subtitle'] = self.subtitle
+            o["subtitle"] = self.subtitle
 
         if self.arg is not None:
-            o['arg'] = self.arg
+            o["arg"] = self.arg
 
         if self.valid is not None:
-            o['valid'] = self.valid
+            o["valid"] = self.valid
 
         if self.variables:
-            o['variables'] = self.variables
+            o["variables"] = self.variables
 
         if self.config:
-            o['config'] = self.config
+            o["config"] = self.config
 
         icon = self._icon()
         if icon:
-            o['icon'] = icon
+            o["icon"] = icon
 
         return o
 
@@ -241,33 +241,46 @@ class Modifier(object):
         """
         icon = {}
         if self.icon is not None:
-            icon['path'] = self.icon
+            icon["path"] = self.icon
 
         if self.icontype is not None:
-            icon['type'] = self.icontype
+            icon["type"] = self.icontype
 
         return icon
 
 
-class Item3(object):
-    """Represents a feedback item for Alfred 3.
+class Item3:
+    """Represents a feedback item for Alfred 3+.
 
     Generates Alfred-compliant JSON for a single item.
 
     Don't use this class directly (as it then won't be associated with
-    any :class:`Workflow3 <workflow.Workflow3>` object), but rather use
-    :meth:`Workflow3.add_item() <workflow.Workflow3.add_item>`.
-    See :meth:`~workflow.Workflow3.add_item` for details of arguments.
+    any :class:`Workflow3 <ualfred.Workflow3>` object), but rather use
+    :meth:`Workflow3.add_item() <ualfred.Workflow3.add_item>`.
+    See :meth:`~ualfred.Workflow3.add_item` for details of arguments.
 
     """
 
-    def __init__(self, title, subtitle='', arg=None, autocomplete=None,
-                 match=None, valid=False, uid=None, icon=None, icontype=None,
-                 type=None, largetext=None, copytext=None, quicklookurl=None):
+    def __init__(
+        self,
+        title,
+        subtitle="",
+        arg=None,
+        autocomplete=None,
+        match=None,
+        valid=False,
+        uid=None,
+        icon=None,
+        icontype=None,
+        type=None,
+        largetext=None,
+        copytext=None,
+        quicklookurl=None,
+    ):
         """Create a new :class:`Item3` object.
 
         Use same arguments as for
-        :class:`Workflow.Item <workflow.Workflow.Item>`.
+        :class:`Workflow.Item <ualfred.Workflow.Item>`.
 
         Argument ``subtitle_modifiers`` is not supported.
 
@@ -292,7 +305,7 @@ class Item3(object):
         self.variables = {}
 
     def setvar(self, name, value):
-        """Set a workflow variable for this Item.
+        """Set a ualfred variable for this Item.
 
         Args:
             name (unicode): Name of variable.
@@ -302,7 +315,7 @@ class Item3(object):
         self.variables[name] = value
 
     def getvar(self, name, default=None):
-        """Return value of workflow variable for ``name`` or ``default``.
+        """Return value of ualfred variable for ``name`` or ``default``.
 
         Args:
             name (unicode): Variable name.
@@ -314,8 +327,7 @@ class Item3(object):
         """
         return self.variables.get(name, default)
 
-    def add_modifier(self, key, subtitle=None, arg=None, valid=None, icon=None,
-                     icontype=None):
+    def add_modifier(self, key, subtitle=None, arg=None, valid=None, icon=None, icontype=None):
         """Add alternative values for a modifier key.
 
         Args:
@@ -325,8 +337,11 @@ class Item3(object):
             valid (bool, optional): Override item validity.
             icon (unicode, optional): Filepath/UTI of icon.
             icontype (unicode, optional): Type of icon.  See
-                :meth:`Workflow.add_item() <workflow.Workflow.add_item>`
+                :meth:`Workflow.add_item() <ualfred.Workflow.add_item>`
                 for valid values.
+
+        In Alfred 4.1+ and Alfred-Workflow 1.40+, ``arg`` may also be a
+        :class:`list` or :class:`tuple`.
 
         Returns:
             Modifier: Configured :class:`Modifier`.
@@ -351,49 +366,49 @@ class Item3(object):
         """
         # Required values
         o = {
-            'title': self.title,
-            'subtitle': self.subtitle,
-            'valid': self.valid,
+            "title": self.title,
+            "subtitle": self.subtitle,
+            "valid": self.valid,
         }
 
         # Optional values
         if self.arg is not None:
-            o['arg'] = self.arg
+            o["arg"] = self.arg
 
         if self.autocomplete is not None:
-            o['autocomplete'] = self.autocomplete
+            o["autocomplete"] = self.autocomplete
 
         if self.match is not None:
-            o['match'] = self.match
+            o["match"] = self.match
 
         if self.uid is not None:
-            o['uid'] = self.uid
+            o["uid"] = self.uid
 
         if self.type is not None:
-            o['type'] = self.type
+            o["type"] = self.type
 
         if self.quicklookurl is not None:
-            o['quicklookurl'] = self.quicklookurl
+            o["quicklookurl"] = self.quicklookurl
 
         if self.variables:
-            o['variables'] = self.variables
+            o["variables"] = self.variables
 
         if self.config:
-            o['config'] = self.config
+            o["config"] = self.config
 
         # Largetype and copytext
         text = self._text()
         if text:
-            o['text'] = text
+            o["text"] = text
 
         icon = self._icon()
         if icon:
-            o['icon'] = icon
+            o["icon"] = icon
 
         # Modifiers
         mods = self._modifiers()
         if mods:
-            o['mods'] = mods
+            o["mods"] = mods
 
         return o
 
@@ -406,10 +421,10 @@ class Item3(object):
         """
         icon = {}
         if self.icon is not None:
-            icon['path'] = self.icon
+            icon["path"] = self.icon
 
         if self.icontype is not None:
-            icon['type'] = self.icontype
+            icon["type"] = self.icontype
 
         return icon
 
@@ -422,10 +437,10 @@ class Item3(object):
         """
         text = {}
         if self.largetext is not None:
-            text['largetype'] = self.largetext
+            text["largetype"] = self.largetext
 
         if self.copytext is not None:
-            text['copy'] = self.copytext
+            text["copy"] = self.copytext
 
         return text
 
@@ -447,14 +462,14 @@ class Item3(object):
 
 
 class Workflow3(Workflow):
-    """Workflow class that generates Alfred 3 feedback.
+    """Workflow class that generates Alfred 3+ feedback.
 
-    It is a subclass of :class:`~workflow.Workflow` and most of its
+    It is a subclass of :class:`~ualfred.Workflow` and most of its
     methods are documented there.
 
     Attributes:
         item_class (class): Class used to generate feedback items.
-        variables (dict): Top level workflow variables.
+        variables (dict): Top level ualfred variables.
 
     """
 
@@ -463,32 +478,32 @@ class Workflow3(Workflow):
     def __init__(self, **kwargs):
         """Create a new :class:`Workflow3` object.
 
-        See :class:`~workflow.Workflow` for documentation.
+        See :class:`~ualfred.Workflow` for documentation.
 
         """
         Workflow.__init__(self, **kwargs)
         self.variables = {}
         self._rerun = 0
         # Get session ID from environment if present
-        self._session_id = os.getenv('_WF_SESSION_ID') or None
+        self._session_id = os.getenv("_WF_SESSION_ID") or None
         if self._session_id:
-            self.setvar('_WF_SESSION_ID', self._session_id)
+            self.setvar("_WF_SESSION_ID", self._session_id)
 
     @property
     def _default_cachedir(self):
-        """Alfred 3's default cache directory."""
+        """Alfred 4's default cache directory."""
         return os.path.join(
-            os.path.expanduser(
-                '~/Library/Caches/com.runningwithcrayons.Alfred-3/'
-                'Workflow Data/'),
-            self.bundleid)
+            os.path.expanduser("~/Library/Caches/com.runningwithcrayons.Alfred/" "Workflow Data/"),
+            self.bundleid,
+        )
 
     @property
     def _default_datadir(self):
-        """Alfred 3's default data directory."""
-        return os.path.join(os.path.expanduser(
-            '~/Library/Application Support/Alfred 3/Workflow Data/'),
-            self.bundleid)
+        """Alfred 4's default data directory."""
+        return os.path.join(
+            os.path.expanduser("~/Library/Application Support/Alfred/Workflow Data/"),
+            self.bundleid,
+        )
 
     @property
     def rerun(self):
@@ -506,28 +521,29 @@ class Workflow3(Workflow):
 
     @property
     def session_id(self):
-        """A unique session ID every time the user uses the workflow.
+        """A unique session ID every time the user uses the ualfred.
 
         .. versionadded:: 1.25
 
-        The session ID persists while the user is using this workflow.
-        It expires when the user runs a different workflow or closes
+        The session ID persists while the user is using this ualfred.
+        It expires when the user runs a different ualfred or closes
         Alfred.
 
         """
         if not self._session_id:
             from uuid import uuid4
+
             self._session_id = uuid4().hex
-            self.setvar('_WF_SESSION_ID', self._session_id)
+            self.setvar("_WF_SESSION_ID", self._session_id)
 
         return self._session_id
 
     def setvar(self, name, value, persist=False):
-        """Set a "global" workflow variable.
+        """Set a "global" ualfred variable.
 
         .. versionchanged:: 1.33
 
-        These variables are always passed to downstream workflow objects.
+        These variables are always passed to downstream ualfred objects.
 
         If you have set :attr:`rerun`, these variables are also passed
         back to the script when Alfred runs it again.
@@ -541,12 +557,12 @@ class Workflow3(Workflow):
         self.variables[name] = value
         if persist:
             from .util import set_config
+
             set_config(name, value, self.bundleid)
-            self.logger.debug('saved variable %r with value %r to info.plist',
-                              name, value)
+            self.logger.debug("saved variable %r with value %r to info.plist", name, value)
 
     def getvar(self, name, default=None):
-        """Return value of workflow variable for ``name`` or ``default``.
+        """Return value of ualfred variable for ``name`` or ``default``.
 
         Args:
             name (unicode): Variable name.
@@ -558,9 +574,22 @@ class Workflow3(Workflow):
         """
         return self.variables.get(name, default)
 
-    def add_item(self, title, subtitle='', arg=None, autocomplete=None,
-                 valid=False, uid=None, icon=None, icontype=None, type=None,
-                 largetext=None, copytext=None, quicklookurl=None, match=None):
+    def add_item(
+        self,
+        title,
+        subtitle="",
+        arg=None,
+        autocomplete=None,
+        valid=False,
+        uid=None,
+        icon=None,
+        icontype=None,
+        type=None,
+        largetext=None,
+        copytext=None,
+        quicklookurl=None,
+        match=None,
+    ):
         """Add an item to be output to Alfred.
 
         Args:
@@ -568,7 +597,10 @@ class Workflow3(Workflow):
                 turned on for your Script Filter, Alfred (version 3.5 and
                 above) will filter against this field, not ``title``.
 
-        See :meth:`Workflow.add_item() <workflow.Workflow.add_item>` for
+        In Alfred 4.1+ and Alfred-Workflow 1.40+, ``arg`` may also be a
+        :class:`list` or :class:`tuple`.
+
+        See :meth:`Workflow.add_item() <ualfred.Workflow.add_item>` for
         the main documentation and other parameters.
 
         The key difference is that this method does not support the
@@ -579,9 +611,21 @@ class Workflow3(Workflow):
             Item3: Alfred feedback item.
 
         """
-        item = self.item_class(title, subtitle, arg, autocomplete,
-                               match, valid, uid, icon, icontype, type,
-                               largetext, copytext, quicklookurl)
+        item = self.item_class(
+            title,
+            subtitle,
+            arg,
+            autocomplete,
+            match,
+            valid,
+            uid,
+            icon,
+            icontype,
+            type,
+            largetext,
+            copytext,
+            quicklookurl,
+        )
 
         # Add variables to child item
         item.variables.update(self.variables)
@@ -592,7 +636,7 @@ class Workflow3(Workflow):
     @property
     def _session_prefix(self):
         """Filename prefix for current session."""
-        return '_wfsess-{0}-'.format(self.session_id)
+        return "_wfsess-{0}-".format(self.session_id)
 
     def _mk_session_name(self, name):
         """New cache name/key based on session ID."""
@@ -610,8 +654,8 @@ class Workflow3(Workflow):
                 to the current session.
 
         ``name`` and ``data`` are the same as for the
-        :meth:`~workflow.Workflow.cache_data` method on
-        :class:`~workflow.Workflow`.
+        :meth:`~ualfred.Workflow.cache_data` method on
+        :class:`~ualfred.Workflow`.
 
         If ``session`` is ``True``, then ``name`` is prefixed
         with :attr:`session_id`.
@@ -636,8 +680,8 @@ class Workflow3(Workflow):
                 to the current session.
 
         ``name``, ``data_func`` and ``max_age`` are the same as for the
-        :meth:`~workflow.Workflow.cached_data` method on
-        :class:`~workflow.Workflow`.
+        :meth:`~ualfred.Workflow.cached_data` method on
+        :class:`~ualfred.Workflow`.
 
         If ``session`` is ``True``, then ``name`` is prefixed
         with :attr:`session_id`.
@@ -662,11 +706,11 @@ class Workflow3(Workflow):
                 current session.
 
         """
+
         def _is_session_file(filename):
             if current:
-                return filename.startswith('_wfsess-')
-            return filename.startswith('_wfsess-') \
-                and not filename.startswith(self._session_prefix)
+                return filename.startswith("_wfsess-")
+            return filename.startswith("_wfsess-") and not filename.startswith(self._session_prefix)
 
         self.clear_cache(_is_session_file)
 
@@ -682,14 +726,14 @@ class Workflow3(Workflow):
         for item in self._items:
             items.append(item.obj)
 
-        o = {'items': items}
+        o = {"items": items}
         if self.variables:
-            o['variables'] = self.variables
+            o["variables"] = self.variables
         if self.rerun:
-            o['rerun'] = self.rerun
+            o["rerun"] = self.rerun
         return o
 
-    def warn_empty(self, title, subtitle=u'', icon=None):
+    def warn_empty(self, title, subtitle="", icon=None):
         """Add a warning to feedback if there are no items.
 
         .. versionadded:: 1.31
@@ -707,6 +751,7 @@ class Workflow3(Workflow):
 
         Returns:
             Item3: Newly-created item.
+
         """
         if len(self._items):
             return
@@ -716,5 +761,8 @@ class Workflow3(Workflow):
 
     def send_feedback(self):
         """Print stored items to console/Alfred as JSON."""
-        json.dump(self.obj, sys.stdout)
+        if self.debugging:
+            json.dump(self.obj, sys.stdout, indent=2, separators=(",", ": "))
+        else:
+            json.dump(self.obj, sys.stdout)
         sys.stdout.flush()
